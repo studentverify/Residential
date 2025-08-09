@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 RedTeamAbel Live Proxy Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff00; 
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+        
+        .dashboard-container { 
+            max-width: 100%; 
+            margin: 0 auto; 
+            background: rgba(0,0,0,0.95); 
+            border-radius: 15px; 
+            padding: 15px;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 40px rgba(0,255,0,0.3);
+            backdrop-filter: blur(15px);
+        }
+        
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 15px;
+            position: relative;
+        }
+        
+        .header h1 { 
+            font-size: 1.8em;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24, #ffa502);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px #ff6b6b;
+            margin-bottom: 8px;
+        }
+        
+        .auto-update-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,255,0,0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            border: 1px solid #00ff00;
+        }
+        
+        .auto-update-indicator.active {
+            animation: pulse-green 2s infinite;
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% { background: rgba(0,255,0,0.2); }
+            50% { background: rgba(0,255,0,0.4); }
+        }
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 10px; 
+            margin: 15px 0;
+        }
+        
+        .stat-card { 
+            background: rgba(0,255,0,0.1); 
+            padding: 12px; 
+            border-radius: 10px; 
+            text-align: center;
+            border: 1px solid #00ff00;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,255,0,0.3);
+        }
+        
+        .stat-number { 
+            font-size: 1.8em; 
+            font-weight: bold; 
+            color: #ff6b6b;
+            text-shadow: 0 0 10px #ff6b6b;
+        }
+        
+        .stat-label { 
+            font-size: 0.9em; 
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .control-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(0,255,0,0.3);
+        }
+        
+        .control-panel h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        button {
+            padding: 12px 15px;
+            border: 2px solid #00ff00;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+        }
+        
+        button:active { transform: translateY(0); }
+        
+        button.auto-update {
+            background: linear-gradient(45deg, #3742fa, #2f3542);
+        }
+        
+        button.danger {
+            background: linear-gradient(45deg, #ff3838, #ff4757);
+        }
+        
+        .proxy-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: rgba(0,0,0,0.8);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .proxy-table th,
+        .proxy-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,255,0,0.2);
+            font-size: 0.85em;
+        }
+        
+        .proxy-table th {
+            background: rgba(0,255,0,0.2);
+            color: #ff6b6b;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .proxy-table tr:hover {
+            background: rgba(0,255,0,0.1);
+        }
+        
+        .proxy-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-verified { background: rgba(0,255,0,0.3); color: #00ff00; }
+        .status-testing { background: rgba(255,165,0,0.3); color: #ffa500; }
+        .status-failed { background: rgba(255,0,0,0.3); color: #ff0000; }
+        
+        .mobile-badge { 
+            background: rgba(255,107,107,0.3); 
+            color: #ff6b6b; 
+            padding: 2px 6px; 
+            border-radius: 8px; 
+            font-size: 0.7em;
+        }
+        
+        .residential-badge { 
+            background: rgba(55,66,250,0.3); 
+            color: #3742fa; 
+            padding: 2px 6px; 
+            border-radius: 8px; 
+            font-size: 0.7em;
+        }
+        
+        .log-panel {
+            background: rgba(0,0,0,0.9);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #333;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 0;
+        }
+        
+        .log-info { color: #00ff00; }
+        .log-warning { color: #ffa502; }
+        .log-error { color: #ff6b6b; }
+        .log-success { color: #2ed573; }
+        
+        .progress-container {
+            background: rgba(0,255,0,0.1);
+            border-radius: 10px;
+            padding: 8px;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(0,255,0,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ff6b6b, #3742fa);
+            width: 0%;
+            transition: width 0.5s ease;
+            animation: progress-glow 2s infinite;
+        }
+        
+        @keyframes progress-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0,255,0,0.5); }
+            50% { box-shadow: 0 0 15px rgba(0,255,0,0.8); }
+        }
+        
+        .auto-update-settings {
+            background: rgba(55,66,250,0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #3742fa;
+        }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        input[type="number"], select {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 5px 8px;
+            border-radius: 4px;
+            width: 80px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.95);
+            color: #00ff00;
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid #00ff00;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container { padding: 10px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .button-grid { grid-template-columns: 1fr; }
+            .proxy-table { font-size: 0.75em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>🔥 RedTeamAbel Live Proxy Dashboard</h1>
+            <p>Real-Time Residential Proxy Intelligence</p>
+            <div class="auto-update-indicator" id="updateIndicator">
+                🔄 Auto-Update: <span id="updateStatus">Active</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalProxies">0</div>
+                <div class="stat-label">Total Proxies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="verifiedProxies">0</div>
+                <div class="stat-label">Verified</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="mobileProxies">0</div>
+                <div class="stat-label">Mobile ISP</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="residentialProxies">0</div>
+                <div class="stat-label">Residential</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="lastUpdate">Never</div>
+                <div class="stat-label">Last Update</div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h3>🎯 Proxy Operations</h3>
+            <div class="button-grid">
+                <button onclick="huntProxies()">🔍 Hunt Fresh Proxies</button>
+                <button onclick="validateProxies()">⚡ Validate All</button>
+                <button onclick="retestResidential()">🏠 Retest Residential</button>
+                <button onclick="cleanupDatabase()">🧹 Cleanup Database</button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h3>🔄 Auto-Update Settings</h3>
+            <div class="auto-update-settings">
+                <div class="setting-row">
+                    <label>Auto-Update:</label>
+                    <button class="auto-update" onclick="toggleAutoUpdate()" id="autoUpdateBtn">Enable</button>
+                </div>
+                <div class="setting-row">
+                    <label>Hunt Interval (minutes):</label>
+                    <input type="number" id="huntInterval" value="60" min="5" max="1440">
+                </div>
+                <div class="setting-row">
+                    <label>Validation Interval (minutes):</label>
+                    <input type="number" id="validateInterval" value="30" min="5" max="720">
+                </div>
+                <div class="setting-row">
+                    <label>Max Workers:</label>
+                    <input type="number" id="maxWorkers" value="15" min="5" max="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div>Operation Progress:</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div id="progressText">Initializing...</div>
+        </div>
+
+        <div class="control-panel">
+            <h3>🏠 Live Residential Proxies</h3>
+            <table class="proxy-table" id="proxyTable">
+                <thead>
+                    <tr>
+                        <th>Proxy</th>
+                        <th>IP</th>
+                        <th>ISP</th>
+                        <th>Type</th>
+                        <th>Speed</th>
+                        <th>Success</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="proxyTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 20px;">
+                            <span class="log-warning">No residential proxies found yet. Click "Hunt Fresh Proxies" to start!</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="control-panel">
+            <h3>📊 Live Activity Log</h3>
+            <div class="log-panel" id="activityLog">
+                <div class="log-entry log-info">[System] Dashboard initialized - Ready for operations</div>
+                <div class="log-entry log-warning">[System] Auto-update disabled - Enable for continuous monitoring</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>RedTeamAbel © 2025 | Live Proxy Intelligence Dashboard</p>
+            <p>🔄 Next auto-update: <span id="nextUpdate">Manual mode</span></p>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Global state
+        let autoUpdateEnabled = false;
+        let autoUpdateInterval = null;
+        let huntIntervalMinutes = 60;
+        let validateIntervalMinutes = 30;
+        let maxWorkers = 15;
+        let lastHuntTime = 0;
+        let lastValidateTime = 0;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInitialData();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('huntInterval').addEventListener('change', function() {
+                huntIntervalMinutes = parseInt(this.value);
+                logActivity('Settings updated: Hunt interval = ' + huntIntervalMinutes + ' minutes', 'info');
+            });
+
+            document.getElementById('validateInterval').addEventListener('change', function() {
+                validateIntervalMinutes = parseInt(this.value);
+                logActivity('Settings updated: Validation interval = ' + validateIntervalMinutes + ' minutes', 'info');
+            });
+
+            document.getElementById('maxWorkers').addEventListener('change', function() {
+                maxWorkers = parseInt(this.value);
+                logActivity('Settings updated: Max workers = ' + maxWorkers, 'info');
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function logActivity(message, type = 'info') {
+            const logPanel = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logPanel.insertBefore(logEntry, logPanel.firstChild);
+            
+            // Keep only last 50 entries
+            while (logPanel.children.length > 50) {
+                logPanel.removeChild(logPanel.lastChild);
+            }
+        }
+
+        function updateProgress(percentage, text = '') {
+            const container = document.getElementById('progressContainer');
+            const fill = document.getElementById('progressFill');
+            const textEl = document.getElementById('progressText');
+            
+            if (percentage > 0) {
+                container.style.display = 'block';
+                fill.style.width = percentage + '%';
+                if (text) textEl.textContent = text;
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        async function loadInitialData() {
+            logActivity('Loading initial proxy data...', 'info');
+            try {
+                await loadProxyStats();
+                await loadResidentialProxies();
+                logActivity('Initial data loaded successfully', 'success');
+            } catch (error) {
+                logActivity('Failed to load initial data: ' + error.message, 'error');
+            }
+        }
+
+        async function loadProxyStats() {
+            try {
+                const response = await fetch('/api/stats');
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('totalProxies').textContent = stats.total || 0;
+                    document.getElementById('verifiedProxies').textContent = stats.verified || 0;
+                    document.getElementById('mobileProxies').textContent = stats.mobile || 0;
+                    document.getElementById('residentialProxies').textContent = stats.residential || 0;
+                    document.getElementById('lastUpdate').textContent = stats.last_update || 'Never';
+                }
+            } catch (error) {
+                logActivity('Failed to load stats: ' + error.message, 'error');
+            }
+        }
+
+        async function loadResidentialProxies() {
+            try {
+                const response = await fetch('/api/residential-proxies');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateProxyTable(data.proxies || []);
+                }
+            } catch (error) {
+                logActivity('Failed to load residential proxies: ' + error.message, 'error');
+            }
+        }
+
+        function updateProxyTable(proxies) {
+            const tbody = document.getElementById('proxyTableBody');
+            tbody.innerHTML = '';
+
+            if (proxies.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 20px;">
+                            <span class="log-warning">No residential proxies found. Start hunting to discover proxies!</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            proxies.forEach(proxy => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><code>${proxy.proxy}</code></td>
+                    <td><code>${proxy.ip}</code></td>
+                    <td>${proxy.isp}</td>
+                    <td>
+                        ${proxy.is_mobile ? '<span class="mobile-badge">📱 Mobile</span>' : '<span class="residential-badge">🏠 Residential</span>'}
+                    </td>
+                    <td>${proxy.response_time}ms</td>
+                    <td>${(proxy.success_rate * 100).toFixed(1)}%</td>
+                    <td><span class="proxy-status status-${proxy.status}">${proxy.status}</span></td>
+                    <td>
+                        <button onclick="testSingleProxy('${proxy.proxy}')" style="padding: 4px 8px; font-size: 0.7em;">Test</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function huntProxies() {
+            logActivity('Starting fresh proxy hunt...', 'info');
+            updateProgress(10, 'Hunting fresh proxies...');
+            
+            try {
+                const response = await fetch('/api/hunt-proxies', { method: 'POST' });
+                const data = await response.json();
+                
+                updateProgress(100, 'Hunt complete!');
+                setTimeout(() => updateProgress(0), 2000);
+                
+                logActivity(`Hunt complete: Found ${data.total} new proxies`, 'success');
+                showNotification(`Found ${data.total} new proxies!`, 'success');
+                
+                lastHuntTime = Date.now();
+                await loadProxyStats();
+                
+            } catch (error) {
+                updateProgress(0);
+                logActivity('Proxy hunt failed: ' + error.message, 'error');
+                showNotification('Proxy hunt failed!', 'error');
+            }
+        }
+
+        async function validateProxies() {
+            logActivity('Starting proxy validation...', 'info');
+            updateProgress(20, 'Validating proxies...');
+            
+            try {
+                const response = await fetch('/api/validate-all', { method: 'POST' });
+                const data = await response.json();
+                
+                updateProgress(100, 'Validation complete!');
+                setTimeout(() => updateProgress(0), 2000);
+                
+                logActivity(`Validation complete: ${data.verified} verified, ${data.residential} residential`, 'success');
+                showNotification(`${data.verified} proxies verified!`, 'success');
+                
+                lastValidateTime = Date.now();
+                await loadProxyStats();
+                await loadResidentialProxies();
+                
+            } catch (error) {
+                updateProgress(0);
+                logActivity('Proxy validation failed: ' + error.message, 'error');
+                showNotification('Validation failed!', 'error');
+            }
+        }
+
+        async function retestResidential() {
+            logActivity('Retesting residential proxies...', 'info');
+            updateProgress(30, 'Retesting residential proxies...');
+            
+            try {
+                const response = await fetch('/api/retest-residential', { method: 'POST' });
+                const data = await response.json();
+                
+                updateProgress(100, 'Retest complete!');
+                setTimeout(() => updateProgress(0), 2000);
+                
+                logActivity(`Retest complete: ${data.tested} tested, ${data.verified} still working`, 'success');
+                showNotification(`${data.verified} residential proxies verified!`, 'success');
+                
+                await loadProxyStats();
+                await loadResidentialProxies();
+                
+            } catch (error) {
+                updateProgress(0);
+                logActivity('Residential retest failed: ' + error.message, 'error');
+                showNotification('Retest failed!', 'error');
+            }
+        }
+
+        async function cleanupDatabase() {
+            logActivity('Cleaning up database...', 'info');
+            updateProgress(50, 'Cleaning database...');
+            
+            try {
+                const response = await fetch('/api/cleanup', { method: 'POST' });
+                const data = await response.json();
+                
+                updateProgress(100, 'Cleanup complete!');
+                setTimeout(() => updateProgress(0), 2000);
+                
+                logActivity(`Cleanup complete: Removed ${data.removed} old entries`, 'success');
+                showNotification('Database cleaned!', 'success');
+                
+                await loadProxyStats();
+                await loadResidentialProxies();
+                
+            } catch (error) {
+                updateProgress(0);
+                logActivity('Database cleanup failed: ' + error.message, 'error');
+                showNotification('Cleanup failed!', 'error');
+            }
+        }
+
+        async function testSingleProxy(proxy) {
+            logActivity(`Testing single proxy: ${proxy}`, 'info');
+            
+            try {
+                const response = await fetch('/api/test-single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ proxy: proxy })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    logActivity(`Proxy test successful: ${proxy} - ${data.response_time}ms`, 'success');
+                    showNotification(`Proxy working: ${data.response_time}ms`, 'success');
+                } else {
+                    logActivity(`Proxy test failed: ${proxy}`, 'error');
+                    showNotification('Proxy test failed!', 'error');
+                }
+                
+                await loadResidentialProxies();
+                
+            } catch (error) {
+                logActivity(`Proxy test error: ${proxy} - ${error.message}`, 'error');
+                showNotification('Test error!', 'error');
+            }
+        }
+
+        function toggleAutoUpdate() {
+            autoUpdateEnabled = !autoUpdateEnabled;
+            const btn = document.getElementById('autoUpdateBtn');
+            const indicator = document.getElementById('updateIndicator');
+            const status = document.getElementById('updateStatus');
+            
+            if (autoUpdateEnabled) {
+                btn.textContent = 'Disable';
+                btn.style.background = 'linear-gradient(45deg, #ff3838, #ff4757)';
+                indicator.classList.add('active');
+                status.textContent = 'Active';
+                startAutoUpdate();
+                logActivity('Auto-update enabled', 'success');
+                showNotification('Auto-update enabled!', 'success');
+            } else {
+                btn.textContent = 'Enable';
+                btn.style.background = 'linear-gradient(45deg, #3742fa, #2f3542)';
+                indicator.classList.remove('active');
+                status.textContent = 'Disabled';
+                stopAutoUpdate();
+                logActivity('Auto-update disabled', 'warning');
+                showNotification('Auto-update disabled!', 'warning');
+            }
+        }
+
+        function startAutoUpdate() {
+            if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+            
+            autoUpdateInterval = setInterval(async () => {
+                const now = Date.now();
+                const huntIntervalMs = huntIntervalMinutes * 60 * 1000;
+                const validateIntervalMs = validateIntervalMinutes * 60 * 1000;
+                
+                // Check if it's time to hunt
+                if (now - lastHuntTime > huntIntervalMs) {
+                    await huntProxies();
+                }
+                
+                // Check if it's time to validate
+                if (now - lastValidateTime > validateIntervalMs) {
+                    await validateProxies();
+                }
+                
+                // Update next update time
+                const nextHunt = lastHuntTime + huntIntervalMs;
+                const nextValidate = lastValidateTime + validateIntervalMs;
+                const nextUpdate = Math.min(nextHunt, nextValidate);
+                const timeUntilNext = Math.max(0, nextUpdate - now);
+                const minutesUntilNext = Math.ceil(timeUntilNext / 60000);
+                
+                document.getElementById('nextUpdate').textContent = `${minutesUntilNext} minutes`;
+                
+            }, 60000); // Check every minute
+        }
+
+        function stopAutoUpdate() {
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateInterval = null;
+            }
+            document.getElementById('nextUpdate').textContent = 'Manual mode';
+        }
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(async () => {
+            await loadProxyStats();
+        }, 30000);
+    </script>
+</body>
+</html>
+
